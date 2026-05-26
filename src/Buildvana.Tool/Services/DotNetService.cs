@@ -154,10 +154,10 @@ public sealed class DotNetService
 
         _logger.LogInformation("Running tests (restore = {Restore}, build = {Build})...", restore, build);
 
-        // `dotnet test` consumes -nologo and -v itself; the configuration and ContinuousIntegrationBuild are
+        // `dotnet test` consumes --verbosity itself; the configuration and ContinuousIntegrationBuild are
         // passed as MSBuild properties using the `--property:` form, which is what `dotnet test` understands
         // (the `-p:` form is not supported here).
-        List<string> args = ["test", solution.SolutionPath, "-nologo", "-v", Verbosity, $"--property:Configuration={configuration}"];
+        List<string> args = ["test", solution.SolutionPath, $"--verbosity={Verbosity}", $"--property:Configuration={configuration}"];
         if (!build)
         {
             args.Add("--no-build");
