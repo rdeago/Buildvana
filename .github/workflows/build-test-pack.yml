@@ -12,7 +12,7 @@ on:
 
 jobs:
   build_test_pack:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     env:
       DOTNET_NOLOGO: 'true'
       DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
@@ -22,8 +22,8 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
     - name: Set bogus local NuGet package directory
-      shell: cmd
-      run: echo NUGET_LOCAL_PACKAGES=%RUNNER_TEMP% >> %GITHUB_ENV%
+      shell: bash
+      run: echo "NUGET_LOCAL_PACKAGES=$RUNNER_TEMP" >> "$GITHUB_ENV"
     - name: Checkout repository with full history
       uses: actions/checkout@v6
       with:
@@ -38,17 +38,17 @@ jobs:
           .config/dotnet-tools.json
           Directory.Packages.props
     - name: Restore .NET tools
-      shell: cmd
+      shell: bash
       run: dotnet tool restore
     - name: Verify buildvana.json schema is up to date
-      shell: cmd
+      shell: bash
       run: dotnet run tools/generate-config-schema.cs -- --check
     - name: Build, test, and pack with Buildvana
-      shell: cmd
+      shell: bash
       run: |
-        if [%BV_VERBOSITY%]==[] set BV_VERBOSITY=Normal
-        if [%RUNNER_DEBUG%]==[1] set BV_VERBOSITY=Diagnostic
-        dotnet bv pack --verbosity %BV_VERBOSITY%
+        if [ -z "$BV_VERBOSITY" ]; then BV_VERBOSITY=Normal; fi
+        if [ "$RUNNER_DEBUG" = "1" ]; then BV_VERBOSITY=Diagnostic; fi
+        dotnet bv pack --verbosity "$BV_VERBOSITY"
     - name: Upload coverage to Codecov
       if: ${{ hashFiles('TestResults/*.cobertura.xml') != '' }}
       uses: codecov/codecov-action@v6

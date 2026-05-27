@@ -48,7 +48,7 @@ on:
         - Diagnostic
 jobs:
   release:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     env:
       DOTNET_NOLOGO: 'true'
       DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
@@ -74,16 +74,16 @@ jobs:
       BV_VERBOSITY: ${{ inputs.buildvanaVerbosity }}
     steps:
     - name: Set bogus local NuGet package directory
-      shell: cmd
-      run: echo NUGET_LOCAL_PACKAGES=%RUNNER_TEMP% >> %GITHUB_ENV%
+      shell: bash
+      run: echo "NUGET_LOCAL_PACKAGES=$RUNNER_TEMP" >> "$GITHUB_ENV"
     - name: Log workflow inputs
-      shell: cmd
+      shell: bash
       run: |
-        echo Version spec change           : %VERSION_SPEC_CHANGE%
-        echo Check public API files        : %CHECK_PUBLIC_API%
-        echo Update changelog on preview   : %FORCE_UPDATE_CHANGELOG%
-        echo Check changelog before update : %CHECK_CHANGELOG%
-        echo Buildvana verbosity           : %BV_VERBOSITY%
+        echo "Version spec change           : $VERSION_SPEC_CHANGE"
+        echo "Check public API files        : $CHECK_PUBLIC_API"
+        echo "Update changelog on preview   : $FORCE_UPDATE_CHANGELOG"
+        echo "Check changelog before update : $CHECK_CHANGELOG"
+        echo "Buildvana verbosity           : $BV_VERBOSITY"
     - name: Checkout repository with full history
       uses: actions/checkout@v6
       with:
@@ -100,15 +100,15 @@ jobs:
           .config/dotnet-tools.json
           Directory.Packages.props
     - name: Restore .NET tools
-      shell: cmd
+      shell: bash
       run: dotnet tool restore
     - name: Run Buildvana release
       id: build
-      shell: cmd
+      shell: bash
       run: |
-        if [%BV_VERBOSITY%]==[] set BV_VERBOSITY=Normal
-        if [%RUNNER_DEBUG%]==[1] set BV_VERBOSITY=Diagnostic
-        dotnet bv release --verbosity %BV_VERBOSITY% --bump %VERSION_SPEC_CHANGE% --check-public-api %CHECK_PUBLIC_API% --unstable-changelog %FORCE_UPDATE_CHANGELOG% --require-changelog %CHECK_CHANGELOG%
+        if [ -z "$BV_VERBOSITY" ]; then BV_VERBOSITY=Normal; fi
+        if [ "$RUNNER_DEBUG" = "1" ]; then BV_VERBOSITY=Diagnostic; fi
+        dotnet bv release --verbosity "$BV_VERBOSITY" --bump "$VERSION_SPEC_CHANGE" --check-public-api "$CHECK_PUBLIC_API" --unstable-changelog "$FORCE_UPDATE_CHANGELOG" --require-changelog "$CHECK_CHANGELOG"
     - name: Upload coverage to Codecov
       if: ${{ hashFiles('TestResults/*.cobertura.xml') != '' }}
       uses: codecov/codecov-action@v6
