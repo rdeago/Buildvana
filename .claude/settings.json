@@ -22,6 +22,8 @@
       "Bash(dotnet publish *)",
       "Bash(dotnet run tools/*)",
       "Bash(dotnet run .claude/tools/*)",
+      "Bash(dotnet bv *)",
+      "Bash(dotnet dnx JetBrains.ReSharper.GlobalTools *)",
       "Bash(gh repo view *)",
       "Bash(gh repo list *)",
       "Bash(gh repo clone *)",
