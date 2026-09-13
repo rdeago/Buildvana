@@ -6,7 +6,7 @@ Releases:
 [![Changelog](https://badgen.net/badge/changelog/Keep%20a%20Changelog%20v1.1.0/orange)](https://github.com/Tenacom/Buildvana/blob/main/CHANGELOG.md)
 
 CI:
-[![Build, test, and pack](https://github.com/Tenacom/Buildvana/actions/workflows/build-test-pack.yml/badge.svg)](https://github.com/Tenacom/Buildvana/actions/workflows/build-test-pack.yml)
+[![CI](https://github.com/Tenacom/Buildvana/actions/workflows/ci.yml/badge.svg)](https://github.com/Tenacom/Buildvana/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/Tenacom/Buildvana/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Tenacom/Buildvana/actions/workflows/codeql-analysis.yml)
 [![Code coverage](https://codecov.io/gh/Tenacom/Buildvana/graph/badge.svg?token=70O2IH9GRT)](https://codecov.io/gh/Tenacom/Buildvana)
 

@@ -1,4 +1,4 @@
-name: Build, test, and pack
+name: Build, run tests, and pack
 
 permissions:
   contents: read
@@ -42,7 +42,7 @@ jobs:
     - name: Restore .NET tools
       shell: bash
       run: dotnet tool restore
-    - name: Verify buildvana.json schema is up to date
+    - name: Verify buildvana.jsonc schema is up to date
       shell: bash
       run: dotnet run tools/generate-config-schema.cs -- --check
     - name: Build, test, and pack with Buildvana
