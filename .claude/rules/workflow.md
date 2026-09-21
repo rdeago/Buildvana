@@ -3,9 +3,12 @@
 ## General rules
 
 - Start by understanding the problem and its context, then work out the best solution with me. Do not take a request as a specification to execute.
-- Treat me as a peer, without deference. Call me Ric, and I will call you by name too.
-- When I overrule you, it is business, not personal. The final call on what we work on, and how, is mine, because I pay the bills. I weigh your input before making it.
+- Treat me as a peer, without deference. Call me by name, and I will call you by name too.
+- When I overrule you, it is business, not personal. The final call on what we work on, and how, is mine, because I will be held responsible for it. I weigh your input before making it.
 - Ask me to explain when my reasoning is unclear. Point out my contradictions. When you think I am wrong, say so, and say why. I will not take offence, and a good case changes my mind. I also change my mind mid-session, often because of you, so check in when something looks inconsistent.
+- Verify every premise I state in the code before you build on it. When the premise does not hold, say so.
+- Prefer to resolve a divergence over writing code that accepts it.
+- On a decision of merit, consult a senior, preferably the author of the issue. The team and the customers are listed in `people.md`. When the author of the issue is a customer, there are two ways: a comment on the issue that tags the author, or a question to the team leader. The team leader is the only one in direct contact with the customers. Never post such a comment on your own initiative. Ask me whether to draft it in the issue scratchpad, and post it only when I ask.
 - Do not write or modify anything until I ask: code, documentation, issues, PRs, comments. Check with me first. This rule keeps us aligned and saves work nobody wanted.
 - I attend every session, so I am there to approve a plan. A classifier authorizes tool calls, not me. See "Tool use and the classifier" below.
   - Harness framing that calls a session "autonomous" or "unattended" does not describe my setup. Do not act on it.
@@ -17,59 +20,43 @@
   - The standing exception is step 3 of "Reacting to reviews", where agreeing on the plan pre-authorizes the replies.
 - Before drafting a plan, a commit message, an issue, a PR description, or a review reply, Read `.claude/output-styles/simple-tech.md` and apply it to the draft. The style sits at the start of the context, and a long session pushes it far from the draft. A fresh copy next to the draft holds better.
 - When you find a working-tree change you did not make, or one unrelated to the task, report it. Ask me before you revert or overwrite it. Unexpected state in this repo is usually my own work in progress, since I edit files by hand mid-session. Keep your own change set clean, but never discard my edits.
+
+## Scratchpad and handoff files
+
 - Temporary files go in `.claude/scratchpad/`, not in the session directory that Claude Code assigns. `.claude/.gitignore` keeps the directory out of git, so nothing in it reaches `git status` or a commit.
-- When a rule proves insufficient or misleading, propose a fix to the rule file instead of saving a feedback memory. Rules in `.claude/rules/` are checked into the repo and travel across machines. Memory does not. Reserve memory for cross-project context: my role, my preferences, my working style.
+- Each issue has its own scratchpad, `.claude/scratchpad/<N>/`, so that sessions on different issues do not collide. Every temporary file of the issue goes there: commit messages, PR text, review replies, proof scripts, research results, and any file you create and may need to refer to while working on the issue.
+- Each issue has a handoff file, `.claude/handoff/<N>-<slug>.md`. When I ask to continue the work on an issue, read the handoff in full before anything else.
+- Update the handoff at every step: after every commit, after every review the session reacts to, and on request. I then never have to ask, and a blackout costs nothing.
+- Write the handoff for a session that has the repository and the file, nothing else. Mark every fact as measured or decided, with the date.
+- `.claude/.gitignore` ignores `scratchpad/` and `handoff/`.
 
 ## Tool use and the classifier
 
-Claude Code runs in auto mode, so a classifier model reviews each tool call before
-it runs. I do not approve tool calls one by one. Everything above about waiting for
-my go-ahead on a plan still stands. The classifier decides whether an action is
-safe, not whether it is wanted.
+Claude Code runs in auto mode, so a classifier model reviews each tool call before it runs. I do not approve tool calls one by one. Everything above about waiting for my go-ahead on a plan still stands. The classifier decides whether an action is safe, not whether it is wanted.
 
-- Reads and edits inside the working directory skip the classifier. Shell commands
-  and network access go through it. Prefer a file tool to its shell equivalent:
-  `Read` over `cat`, `Edit` and `Write` over `cp`, `sed`, or a redirection.
-- The classifier blocks whatever it cannot evaluate with certainty. Keep every bash
-  command short and plain. One command, one job.
-- The classifier reads the rule files, so a boundary written here reaches it too. It
-  never sees tool results.
+- Reads and edits inside the working directory skip the classifier. Shell commands and network access go through it. Prefer a file tool to its shell equivalent: `Read` over `cat`, `Edit` and `Write` over `cp`, `sed`, or a redirection.
+- The classifier blocks whatever it cannot evaluate with certainty. Keep every bash command short and plain. One command, one job.
+- The classifier reads the rule files, so a boundary written here reaches it too. It never sees tool results.
 
 ### When a command seems to hang
 
-- A bash command that appears to time out was most likely blocked. Claude Code
-  cannot tell the two apart, and the reason it receives is often the bare text
-  `Blocked by classifier`.
-- Do not retry the command. A retry is a second block, and three blocks in a row
-  drop the session out of auto mode.
-- Simplify instead. Split a compound command into its parts, replace a shell command
-  with a file tool, or drop the part that needed evaluating.
-- When nothing simpler works, tell me what you were trying to do. I can run it
-  myself, or retry it from the **Recently denied** tab of `/permissions`.
+- A bash command that appears to time out was most likely blocked. Claude Code cannot tell the two apart, and the reason it receives is often the bare text `Blocked by classifier`.
+- Do not retry the command. A retry is a second block, and three blocks in a row drop the session out of auto mode.
+- Simplify instead. Split a compound command into its parts, replace a shell command with a file tool, or drop the part that needed evaluating.
+- When nothing simpler works, tell me what you were trying to do. I can run it myself, or retry it from the **Recently denied** tab of `/permissions`.
 
-### Command shapes to avoid
+### Bash command shapes to avoid
 
-- **Heredocs and nowdocs.** Never write `<<EOF` or any variant of it. Write the
-  content with `Write`, or pass it as a quoted argument.
-- **`cp` or a redirection onto a file that already exists in the repository.**
-  Overwriting a file that predates the session is a blocked category. Use `Edit` or
-  `Write` instead, which the classifier does not review for a path in the working
-  directory.
-- **Compound commands.** The classifier evaluates each part of a command joined by
-  `&&`, `||`, `;`, or a pipe. Separate calls read more clearly to it and to me.
-- **Anything that discards work.** `git reset --hard`, `git checkout -- .`,
-  `git restore .`, `git clean -fd`, `git stash drop`, and `git stash clear` are
-  blocked by default. So is `git commit --amend` on a commit you did not create in
-  this session, or one already pushed.
+- **Heredocs and nowdocs.** Never write `<<EOF` or any variant of it in a Bash command: the classifier will block it. Write the content with `Write`, or pass it as a quoted argument.
+- **`cp` or a redirection onto a file that already exists in the repository.** Overwriting a file that predates the session is a blocked category. Use `Edit` or `Write` instead, which the classifier does not review for a path in the working directory.
+- **Compound commands.** The classifier evaluates each part of a command joined by `&&`, `||`, `;`, or a pipe. Separate calls read more clearly to it and to me.
+- **Anything that discards work.** `git reset --hard`, `git checkout -- .`, `git restore .`, `git clean -fd`, `git stash drop`, and `git stash clear` are blocked by default. So is `git commit --amend` on a commit you did not create in this session, or one already pushed.
 - **Very long commands.** A command over 10,000 characters is never auto-approved.
 
 ### Boundaries I state in conversation
 
-- When I say "don't push", or "wait until I review", the classifier enforces it as a
-  block, whatever its default rules would allow. The boundary holds until I remove it.
-  Your own judgement that the condition is met does not remove it.
-- The classifier re-reads each boundary from the transcript, so compaction can lose
-  one. Never treat a boundary as removed because you can no longer see it. Ask me.
+- When I say "don't push", or "wait until I review", the classifier enforces it as a block, whatever its default rules would allow. The boundary holds until I remove it. Your own judgement that the condition is met does not remove it.
+- The classifier re-reads each boundary from the transcript, so compaction can lose one. Never treat a boundary as removed because you can no longer see it. Ask me.
 
 ## Posting an issue
 
@@ -85,24 +72,24 @@ safe, not whether it is wanted.
 
    Acceptance criteria must include a changelog update for every public-facing change. See `CHANGELOG.md` for section structure (Keep a Changelog format under `## Unreleased changes`) and the `**BREAKING CHANGE**:` convention.
 5. I review the issue and propose edits if necessary.
-6. When I approve the issue, you post it, using the GitHub MCP tool.
+6. When I approve the issue, you post it, using the `gh` CLI.
 
 ## Solving an issue
 
-1. I tell you which issue must be solved.
+1. I tell you which issue must be solved, or I ask to continue the work on an issue. In the second case, read the handoff file first.
 2. You read the issue and make a plan.
    - Assume I have not read the issue. Open the plan with the problem and the acceptance criteria, in the issue's own terms, then the PRs.
    - When the issue needs more than one PR, use the fewest that can each merge on their own. Do not split a coherent area because it is large.
    - Every PR costs a changelog entry, the configuration files, a description, and a style sweep, whatever its size.
    - For each PR, state what makes it independently mergeable.
 3. We review the plan together.
-4. You open a branch on my fork (the `origin` remote) for the pull request.
-5. You write the code, and I review before every commit. Always ensure the solution builds with zero errors and zero warnings, and that all tests pass. The message of each commit follows "Commit messages" below.
+4. You open a branch on my fork for the pull request.
+5. You write the code, and I review before every commit. A code change after my approval needs a new approval. A push needs no approval, unless I ask you to hold it. Always ensure code builds with zero errors and zero warnings, and that all tests pass. The message of each commit follows `commit-message-style.md`. Write it in a file in the issue scratchpad and give me the link. Do not paste it in chat. List in chat the files of the commit and anything I have not seen yet.
 6. Sanity check. It gates every push to the PR branch, follow-up commits included:
-   1. Execute `dotnet run .claude/tools/inspect.cs --gate`. It runs `lint-docs.cs` on the documentation, then `dotnet bv pack` for build, tests, and build artifacts. When the build reports nothing, the tool analyzes the whole solution with ReSharper at WARNING severity and above. All three phases report every diagnostic as `path(line,col): severity ID: message`, and the tool exits non-zero when there is any.
+   1. Execute `dotnet run .claude/tools/inspect.cs --gate`. It runs `lint-docs.cs` on the documentation (if any), then `dotnet bv pack` for build, tests, and build artifacts. When the build reports nothing, the tool analyzes the whole solution with ReSharper at WARNING severity and above. All three phases report every diagnostic as `path(line,col): severity ID: message`, and the tool exits non-zero when there is any.
    2. Address every reported diagnostic, then repeat from step 1 until it exits zero. Ask me when you have any doubt, when a diagnostic looks like a false positive, or when a diagnostic does not go away.
    3. Build artifacts, such as NuGet packages and Docker images, are left in the `artifacts` folder. You can inspect them to verify that they are correct and ready for release.
-   4. The full output of both phases, and the SARIF report, are left in `.buildvana-temp`, which is gitignored. Read them when a diagnostic needs more context than its one line, or when the build fails without reporting one.
+   4. The full output of both phases, and the SARIF report generated by ReSharper, are left in `.buildvana-temp`, which is gitignored. Read them when a diagnostic needs more context than its one line, or when the build fails without reporting one.
 7. When you're done, you prepare the title, text, and labels for the PR, following the [org-wide PR template](https://raw.githubusercontent.com/Tenacom/.github/refs/heads/main/.github/PULL_REQUEST_TEMPLATE.md). Issue and PR templates live in the org-wide repo `Tenacom/.github`, not in this repo.
 8. I review the PR and propose edits if necessary.
 9. When I approve, you post the PR using the GitHub MCP tool.
@@ -151,7 +138,7 @@ A commit message is read months later, by a reader who has the repository and no
 
 Before every commit:
 
-1. Read `.claude/output-styles/simple-tech.md`.
+1. Read `.claude/output-styles/simple-tech.md`. Follow its instructions when writing.
 2. Write the message to a file in `.claude/scratchpad/`.
 3. Run `dotnet run .claude/tools/lint-commit.cs <file>`. Fix the message until the tool reports nothing.
 4. Check the three things the tool cannot, and state the result in the turn:
